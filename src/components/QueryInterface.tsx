@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Search, Database, Users, GraduationCap, BookOpen } from 'lucide-react';
+import { DataTable, TableColumn } from '@/components/DataTable';
+import { RequestQueryBuilder } from '@/lib/query-builder';
 
 interface QueryResult {
   id: string;
@@ -19,6 +21,9 @@ interface QueryResult {
 const QueryInterface = () => {
   const [results, setResults] = useState<QueryResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [studentsData, setStudentsData] = useState(mockStudentsData);
+  const [classesData, setClassesData] = useState(mockClassesData);
+  const [levelsData, setLevelsData] = useState(mockLevelsData);
 
   const handleQuery = async (queryType: string, queryData: any) => {
     setLoading(true);
@@ -55,94 +60,67 @@ const QueryInterface = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Query Panel */}
-          <div className="lg:col-span-2">
-            <Card className="shadow-academic border-0">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Search className="h-5 w-5 text-academic-blue" />
-                  Query Builder
-                </CardTitle>
-                <CardDescription>
-                  Build and execute queries for your educational data
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="students" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 mb-6">
-                    <TabsTrigger value="students" className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      Students
-                    </TabsTrigger>
-                    <TabsTrigger value="classes" className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4" />
-                      Classes
-                    </TabsTrigger>
-                    <TabsTrigger value="levels" className="flex items-center gap-2">
-                      <GraduationCap className="h-4 w-4" />
-                      Levels
-                    </TabsTrigger>
-                  </TabsList>
+        <Tabs defaultValue="students" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="students" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Students
+            </TabsTrigger>
+            <TabsTrigger value="classes" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              Classes
+            </TabsTrigger>
+            <TabsTrigger value="levels" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Levels
+            </TabsTrigger>
+          </TabsList>
 
-                  <TabsContent value="students" className="space-y-4">
-                    <StudentQueryForm onSubmit={(data) => handleQuery('students', data)} loading={loading} />
-                  </TabsContent>
+          <TabsContent value="students" className="space-y-6">
+            <DataTable
+              title="Students Data"
+              description="Query and filter student records"
+              columns={studentColumns}
+              data={studentsData}
+              loading={loading}
+              onQuery={(queryString) => {
+                console.log('Students Query:', queryString);
+                handleQuery('students', { queryString });
+              }}
+              onRefresh={() => setStudentsData([...mockStudentsData])}
+            />
+          </TabsContent>
 
-                  <TabsContent value="classes" className="space-y-4">
-                    <ClassQueryForm onSubmit={(data) => handleQuery('classes', data)} loading={loading} />
-                  </TabsContent>
+          <TabsContent value="classes" className="space-y-6">
+            <DataTable
+              title="Classes Data"
+              description="Query and filter class records"
+              columns={classColumns}
+              data={classesData}
+              loading={loading}
+              onQuery={(queryString) => {
+                console.log('Classes Query:', queryString);
+                handleQuery('classes', { queryString });
+              }}
+              onRefresh={() => setClassesData([...mockClassesData])}
+            />
+          </TabsContent>
 
-                  <TabsContent value="levels" className="space-y-4">
-                    <LevelQueryForm onSubmit={(data) => handleQuery('levels', data)} loading={loading} />
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Results Panel */}
-          <div>
-            <Card className="shadow-academic border-0">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5 text-academic-blue" />
-                  Query Results
-                </CardTitle>
-                <CardDescription>
-                  {results.length} {results.length === 1 ? 'result' : 'results'} found
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 max-h-96 overflow-y-auto">
-                {results.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Database className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No queries executed yet</p>
-                    <p className="text-sm">Run a query to see results here</p>
-                  </div>
-                ) : (
-                  results.map((result) => (
-                    <div key={result.id} className="p-4 bg-academic-light rounded-lg border">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="secondary" className="capitalize">
-                          {result.type}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {result.timestamp}
-                        </span>
-                      </div>
-                      <div className="text-sm">
-                        <pre className="whitespace-pre-wrap text-xs bg-muted p-2 rounded">
-                          {JSON.stringify(result.data, null, 2)}
-                        </pre>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+          <TabsContent value="levels" className="space-y-6">
+            <DataTable
+              title="Levels Data"
+              description="Query and filter level records"
+              columns={levelColumns}
+              data={levelsData}
+              loading={loading}
+              onQuery={(queryString) => {
+                console.log('Levels Query:', queryString);
+                handleQuery('levels', { queryString });
+              }}
+              onRefresh={() => setLevelsData([...mockLevelsData])}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
@@ -370,5 +348,60 @@ const LevelQueryForm: React.FC<FormProps> = ({ onSubmit, loading }) => {
     </form>
   );
 };
+
+// Mock data
+const mockStudentsData = [
+  { id: 1, name: 'John Doe', email: 'john@example.com', level: 'Undergraduate', status: 'active', gpa: 3.8, credits: 45 },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', level: 'Graduate', status: 'active', gpa: 3.9, credits: 32 },
+  { id: 3, name: 'Mike Johnson', email: 'mike@example.com', level: 'Undergraduate', status: 'inactive', gpa: 3.2, credits: 78 },
+  { id: 4, name: 'Sarah Wilson', email: 'sarah@example.com', level: 'Graduate', status: 'active', gpa: 3.7, credits: 18 },
+  { id: 5, name: 'Tom Brown', email: 'tom@example.com', level: 'Undergraduate', status: 'graduated', gpa: 3.6, credits: 120 },
+];
+
+const mockClassesData = [
+  { id: 1, name: 'Computer Science 101', instructor: 'Dr. Smith', semester: 'Fall 2024', maxStudents: 30, enrolled: 25, credits: 3 },
+  { id: 2, name: 'Mathematics 201', instructor: 'Prof. Johnson', semester: 'Fall 2024', maxStudents: 25, enrolled: 22, credits: 4 },
+  { id: 3, name: 'Physics 301', instructor: 'Dr. Brown', semester: 'Spring 2024', maxStudents: 20, enrolled: 18, credits: 3 },
+  { id: 4, name: 'Chemistry 101', instructor: 'Prof. Davis', semester: 'Fall 2024', maxStudents: 35, enrolled: 32, credits: 4 },
+  { id: 5, name: 'Biology 201', instructor: 'Dr. Wilson', semester: 'Spring 2024', maxStudents: 28, enrolled: 26, credits: 3 },
+];
+
+const mockLevelsData = [
+  { id: 1, name: 'Undergraduate', department: 'Engineering', credits: 120, prerequisites: 'High School Diploma', duration: '4 years' },
+  { id: 2, name: 'Graduate', department: 'Computer Science', credits: 36, prerequisites: 'Bachelor Degree', duration: '2 years' },
+  { id: 3, name: 'Doctorate', department: 'Physics', credits: 72, prerequisites: 'Master Degree', duration: '4-6 years' },
+  { id: 4, name: 'Certificate', department: 'Business', credits: 18, prerequisites: 'None', duration: '1 year' },
+  { id: 5, name: 'Associate', department: 'Liberal Arts', credits: 60, prerequisites: 'High School Diploma', duration: '2 years' },
+];
+
+// Table column definitions
+const studentColumns: TableColumn[] = [
+  { key: 'id', label: 'ID', sortable: true, filterable: true, type: 'number' },
+  { key: 'name', label: 'Name', sortable: true, filterable: true, type: 'text' },
+  { key: 'email', label: 'Email', sortable: true, filterable: true, type: 'text' },
+  { key: 'level', label: 'Level', sortable: true, filterable: true, type: 'text' },
+  { key: 'status', label: 'Status', sortable: true, filterable: true, type: 'status' },
+  { key: 'gpa', label: 'GPA', sortable: true, filterable: false, type: 'number' },
+  { key: 'credits', label: 'Credits', sortable: true, filterable: false, type: 'number' },
+];
+
+const classColumns: TableColumn[] = [
+  { key: 'id', label: 'ID', sortable: true, filterable: true, type: 'number' },
+  { key: 'name', label: 'Class Name', sortable: true, filterable: true, type: 'text' },
+  { key: 'instructor', label: 'Instructor', sortable: true, filterable: true, type: 'text' },
+  { key: 'semester', label: 'Semester', sortable: true, filterable: true, type: 'text' },
+  { key: 'maxStudents', label: 'Max Students', sortable: true, filterable: false, type: 'number' },
+  { key: 'enrolled', label: 'Enrolled', sortable: true, filterable: false, type: 'number' },
+  { key: 'credits', label: 'Credits', sortable: true, filterable: false, type: 'number' },
+];
+
+const levelColumns: TableColumn[] = [
+  { key: 'id', label: 'ID', sortable: true, filterable: true, type: 'number' },
+  { key: 'name', label: 'Level Name', sortable: true, filterable: true, type: 'text' },
+  { key: 'department', label: 'Department', sortable: true, filterable: true, type: 'text' },
+  { key: 'credits', label: 'Credits', sortable: true, filterable: false, type: 'number' },
+  { key: 'prerequisites', label: 'Prerequisites', sortable: false, filterable: true, type: 'text' },
+  { key: 'duration', label: 'Duration', sortable: true, filterable: true, type: 'text' },
+];
 
 export default QueryInterface;
